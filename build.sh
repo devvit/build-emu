@@ -13,4 +13,5 @@ git checkout master
 git pull origin master
 
 cd $build_dir
+git apply ../1.patch
 xcodebuild -workspace "OpenEmu.xcworkspace" -scheme "OpenEmu (Experimental)" -configuration Release -sdk macosx -arch x86_64 -derivedDataPath DerivedData

@@ -1,0 +1,79 @@
+diff --git a/OpenEmu/CoreDownload.swift b/OpenEmu/CoreDownload.swift
+index a261b1a..e7bfd79 100644
+--- a/OpenEmu/CoreDownload.swift
++++ b/OpenEmu/CoreDownload.swift
+@@ -50,25 +50,57 @@ final class CoreDownload: NSObject {
+         updateProperties(with: plugin)
+     }
+     
+-    func start() {
+-        guard let appcastItem = appcastItem, !isDownloading else { return }
+-        
+-        assert(downloadSession == nil, "There shouldn't be a previous download session.")
+-        
+-        let downloadSession = URLSession(configuration: .default, delegate: self, delegateQueue: .main)
+-        downloadSession.sessionDescription = bundleIdentifier
+-        self.downloadSession = downloadSession
+-        
+-        let downloadTask = downloadSession.downloadTask(with: appcastItem.fileURL)
+-        
+-        DLog("Starting core download (\(downloadSession.sessionDescription ?? ""))")
+-        
+-        downloadTask.resume()
+-        
+-        isDownloading = true
+-        delegate?.coreDownloadDidStart(self)
++func start() {
++    guard let appcastItem = appcastItem, !isDownloading else { return }
++    
++    assert(downloadSession == nil, "There shouldn't be a previous download session.")
++    
++    // 1. 创建默认配置
++    let configuration = URLSessionConfiguration.default
++    
++    // 2. 从环境变量读取代理并注入
++    if let proxySettings = self.proxySettingsFromEnvironment() {
++        configuration.connectionProxyDictionary = proxySettings
++        DLog("Core download using environment proxy.")
++    }
++    
++    // 3. 使用配置好的 configuration 初始化 session
++    let downloadSession = URLSession(configuration: configuration, delegate: self, delegateQueue: .main)
++    downloadSession.sessionDescription = bundleIdentifier
++    self.downloadSession = downloadSession
++    
++    let downloadTask = downloadSession.downloadTask(with: appcastItem.fileURL)
++    
++    DLog("Starting core download (\(downloadSession.sessionDescription ?? ""))")
++    
++    downloadTask.resume()
++    
++    isDownloading = true
++    delegate?.coreDownloadDidStart(self)
++}
++
++/// 解析环境变量中的代理设置
++private func proxySettingsFromEnvironment() -> [AnyHashable: Any]? {
++    let env = ProcessInfo.processInfo.environment
++    var proxyDict = [AnyHashable: Any]()
++    
++    // 检查 http_proxy 和 https_proxy
++    let configs = [
++        (env["http_proxy"] ?? env["HTTP_PROXY"], kCFNetworkProxiesHTTPEnable, kCFNetworkProxiesHTTPProxy, kCFNetworkProxiesHTTPPort, 80),
++        (env["https_proxy"] ?? env["HTTPS_PROXY"], kCFNetworkProxiesHTTPSEnable, kCFNetworkProxiesHTTPSProxy, kCFNetworkProxiesHTTPSPort, 443)
++    ]
++    
++    for (proxyStr, enableKey, hostKey, portKey, defaultPort) in configs {
++        if let proxyStr = proxyStr, let url = URL(string: proxyStr), let host = url.host {
++            proxyDict[enableKey] = 1
++            proxyDict[hostKey] = host
++            proxyDict[portKey] = url.port ?? defaultPort
++        }
+     }
+     
++    return proxyDict.isEmpty ? nil : proxyDict
++}
++    
+     func cancel() {
+         DLog("Cancelling core download (\(downloadSession?.sessionDescription ?? ""))")
+         downloadSession?.invalidateAndCancel()
