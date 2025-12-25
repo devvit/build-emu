@@ -14,13 +14,13 @@ jobs:
       - name: Build OpenEmu Experimental
         run: bash build.sh
       - name: Remove code signature
-        working-directory: ${{github.workspace}}OpenEmu/DerivedData/Build/Products/Release/
+        working-directory: ${{github.workspace}}/OpenEmu/DerivedData/Build/Products/Release/
         run: codesign --remove-signature OpenEmu.app
       - name: Zip OpenEmu Experimental
-        working-directory: ${{github.workspace}}OpenEmu/DerivedData/Build/Products/Release/
+        working-directory: ${{github.workspace}}/OpenEmu/DerivedData/Build/Products/Release/
         run: zip -y -r OpenEmu-experimental.zip OpenEmu.app
       - name: Upload OpenEmu Experimental
         uses: actions/upload-artifact@v4
         with:
           name: OpenEmu-experimental.zip
-          path: ${{github.workspace}}OpenEmu/DerivedData/Build/Products/Release/OpenEmu-experimental.zip
+          path: ${{github.workspace}}/OpenEmu/DerivedData/Build/Products/Release/OpenEmu-experimental.zip
