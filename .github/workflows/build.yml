@@ -1,0 +1,30 @@
+name: BUILD
+
+on:
+  push:
+  # schedule:
+  #   - cron: '0 0 1 * *'
+
+jobs:
+  build:
+    runs-on: "macos-latest"
+    steps:
+      - name: "checkout repo"
+        uses: actions/checkout@v4
+
+      - name: Build OpenEmu Experimental
+        run: |
+          git clone --depth 1 --recursive --shallow-submodules https://github.com/OpenEmu/OpenEmu
+          cd OpenEmu
+          xcodebuild -workspace "OpenEmu.xcworkspace" -scheme "OpenEmu (Experimental)" -configuration Release -sdk macosx -arch x86_64 -derivedDataPath DerivedData
+      - name: Remove code signature
+        working-directory: ${{github.workspace}}OpenEmu/DerivedData/Build/Products/Release/
+        run: codesign --remove-signature OpenEmu.app
+      - name: Zip OpenEmu Experimental
+        working-directory: ${{github.workspace}}OpenEmu/DerivedData/Build/Products/Release/
+        run: zip -y -r OpenEmu-experimental.zip OpenEmu.app
+      - name: Upload OpenEmu Experimental
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenEmu-experimental.zip
+          path: ${{github.workspace}}OpenEmu/DerivedData/Build/Products/Release/OpenEmu-experimental.zip
