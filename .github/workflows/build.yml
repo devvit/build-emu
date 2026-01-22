@@ -24,3 +24,4 @@ jobs:
         with:
           name: OpenEmu-experimental.zip
           path: ${{github.workspace}}/OpenEmu/DerivedData/Build/Products/Release/OpenEmu-experimental.zip
+          retention-days: 3
