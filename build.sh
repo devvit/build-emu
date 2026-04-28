@@ -8,11 +8,11 @@ git clone --depth 1 --recursive --shallow-submodules https://github.com/OpenEmu/
 cd OpenEmu
 build_dir=$(pwd)
 
-git submodule update --remote --recursive
+# git submodule update --remote --recursive
 
-# cd OpenEmu-SDK
-# git checkout master
-# git pull origin master
+cd OpenEmu-SDK
+git checkout master
+git pull origin master
 
 cd $build_dir
 git apply ../1.patch
